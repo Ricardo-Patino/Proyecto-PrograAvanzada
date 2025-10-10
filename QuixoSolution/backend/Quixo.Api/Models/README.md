@@ -1,0 +1,1 @@
+/* Models are represented by lightweight DTOs in Program.cs for brevity. You may add POCOs under this folder if desired. */

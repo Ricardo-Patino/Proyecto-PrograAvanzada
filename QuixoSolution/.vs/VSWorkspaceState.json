@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\backend",
+    "\\backend\\Quixo.Api",
+    "\\frontend",
+    "\\frontend\\quixo-web"
+  ],
+  "SelectedNode": "\\backend\\Quixo.Api\\Quixo.Api.csproj",
+  "PreviewInSolutionExplorer": false
+}

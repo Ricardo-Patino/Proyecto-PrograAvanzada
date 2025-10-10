@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quixo</title>
+    <style>
+      body { font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; margin:0; background:#0b0f17; color:#e5e7eb; }
+      header { display:flex; gap:12px; align-items:center; padding:14px 20px; border-bottom:1px solid #1f2937; position:sticky; top:0; background:#0b0f17; z-index:10; }
+      a { color:#93c5fd; text-decoration:none; }
+      nav a { margin-right: 14px; }
+      .container { padding: 20px; max-width: 1080px; margin: 0 auto; }
+      .btn { padding:10px 14px; border-radius:10px; border:1px solid #374151; background:#111827; color:#e5e7eb; cursor:pointer; }
+      .btn:hover { background:#1f2937; }
+      .grid { display:grid; grid-template-columns: repeat(5, 64px); gap:6px; user-select:none; }
+      .cell { width:64px; height:64px; display:flex; align-items:center; justify-content:center; border-radius:10px; border:1px solid #374151; background:#0f172a; font-weight:700; font-size:20px; }
+      .perimeter { outline: 2px dashed #334155; }
+      .clock { font-family: 'Seven Segments', monospace; font-size: 28px; letter-spacing: 2px; background:#111827; padding:8px 12px; border-radius:10px; border:1px solid #374151;}
+      @font-face{
+        font-family:'Seven Segments';
+        src: local('Courier New'); /* fallback look */
+      }
+      .toolbar { display:flex; gap:10px; align-items:center; margin-bottom: 16px; flex-wrap: wrap; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { padding:10px; border-bottom:1px solid #1f2937; }
+      th { text-align:left; color:#9ca3af; font-weight:600; }
+      .tag { padding:4px 8px; border-radius:20px; background:#1f2937; border:1px solid #374151; font-size:12px; }
+
+      /* ← estas tres reglas iban fuera; ahora están dentro del <style> */
+      .cell.sel { outline: 3px solid #60a5fa; }
+      .dirbtn, .dotbtn { padding:8px 10px; border:1px solid #374151; background:#0f172a; border-radius:10px; cursor:pointer; }
+      .dirbtn:hover, .dotbtn:hover { background:#1f2937; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
