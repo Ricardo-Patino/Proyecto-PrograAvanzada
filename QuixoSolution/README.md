@@ -43,5 +43,5 @@ GET `/api/stats/duo` y `/api/stats/quartet`.
 
 
 
-## Integrantes Los nombres y carnés de los integrantes del grupo.
+## Integrantes> nombres - carnés de los integrantes del grupo y correo de GIT.
 - ### Ricardo Patiño Jiménez - FH22011118 - Usuario y correo de Git: Ricardo-Patino rickpatinor@gmail.com
