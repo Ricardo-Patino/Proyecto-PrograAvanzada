@@ -46,3 +46,4 @@ GET `/api/stats/duo` y `/api/stats/quartet`.
 ## Integrantes> nombres - carnés de los integrantes del grupo y correo de GIT.
 - ### Ricardo Patiño Jiménez - FH22011118 - Usuario y correo de Git: Ricardo-Patino rickpatinor@gmail.com
 - ### Isaac Arias Morera - FI23028657 - Usuario y correo de Git: IsaacAriasMore jarias30680@ufide.ac.cr
+- ### Alex Monge Arias - FH23014026 - Usuario y correo de Git: ALE20201 amonge50242@ufide.ac.cr
