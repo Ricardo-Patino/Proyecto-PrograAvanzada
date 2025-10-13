@@ -39,3 +39,9 @@ GET `/api/games/{id}/export.xml`.
 
 ## Estadísticas
 GET `/api/stats/duo` y `/api/stats/quartet`.
+
+
+
+
+##Integrantes Los nombres y carnés de los integrantes del grupo.
+- ### Ricardo Patiño Jiménez - FH22011118  
