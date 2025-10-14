@@ -1,0 +1,145 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\geometry{margin=1in}
+\usepackage{graphicx}
+\usepackage{pgf, tikz}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\pagestyle{fancy}
+\fancyhf{}
+\rfoot{\thepage}
+\setstretch{1.2}
+\setlength{\parskip}{0.8em}
+
+\title{\textbf{Documentación del Proyecto: Quixo Starter \\ (ASP.NET Core 8 + React Vite)}}
+\author{
+\begin{tabular}{ll}
+\textbf{Integrante} & \textbf{Carné / Usuario Git / Correo} \\
+Ricardo Patiño Jiménez & FH22011118 / Ricardo-Patino / rickpatinor@gmail.com \\
+Isaac Arias Morera & FI23028657 / IsaacAriasMore / jarias30680@ufide.ac.cr \\
+Alex Monge Arias & FH23014026 / ALE20201 / amonge50242@ufide.ac.cr \\
+Brandon Céspedes & FH22012992 / Bcespedes04 / bcespedes@traarepuestos.com \\
+\end{tabular}
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Integrantes del Grupo}
+\begin{itemize}
+    \item Ricardo Patiño Jiménez — FH22011118 — Usuario Git: Ricardo-Patino — Correo: \href{mailto:rickpatinor@gmail.com}{rickpatinor@gmail.com}
+    \item Isaac Arias Morera — FI23028657 — Usuario Git: IsaacAriasMore — Correo: \href{mailto:jarias30680@ufide.ac.cr}{jarias30680@ufide.ac.cr}
+    \item Alex Monge Arias — FH23014026 — Usuario Git: ALE20201 — Correo: \href{mailto:amonge50242@ufide.ac.cr}{amonge50242@ufide.ac.cr}
+    \item Brandon Céspedes — FH22012992 — Usuario Git: Bcespedes04 — Correo: \href{mailto:bcespedes@traarepuestos.com}{bcespedes@traarepuestos.com}
+\end{itemize}
+
+\section{Descripción General del Proyecto}
+El proyecto \textbf{Quixo Starter} es una aplicación web desarrollada utilizando \textbf{ASP.NET Core 8 (Minimal API)} en el backend y \textbf{React + Vite} en el frontend.  
+Su objetivo es implementar el juego Quixo con una arquitectura moderna basada en separación de responsabilidades, conectividad API REST y despliegue ágil.
+
+\section{Estructura del Proyecto}
+\begin{verbatim}
+QuixoSolution/
+  backend/Quixo.Api/        # ASP.NET Core 8 Minimal API + Dapper
+  frontend/quixo-web/       # React + Vite SPA
+  db/Scripts/quixo_mysql.sql
+\end{verbatim}
+
+\section{Frameworks y Herramientas Utilizadas}
+\begin{itemize}
+    \item \textbf{Backend:} ASP.NET Core 8, Dapper
+    \item \textbf{Frontend:} React + Vite
+    \item \textbf{Base de datos:} MySQL 8+
+    \item \textbf{Entornos de desarrollo:} Visual Studio 2022, VS Code
+    \item \textbf{Control de versiones:} Git + GitHub
+\end{itemize}
+
+\section{Tipo de Aplicación}
+El proyecto implementa una \textbf{SPA (Single Page Application)}, en la cual el frontend React se comunica con el backend mediante peticiones HTTP a la API REST.
+
+\section{Arquitectura Utilizada}
+Se utiliza una arquitectura \textbf{cliente-servidor} basada en \textbf{MVC (Modelo–Vista–Controlador)}:  
+\begin{itemize}
+    \item \textbf{Modelo:} Manejado mediante Dapper y las entidades de base de datos en C\#.
+    \item \textbf{Controlador:} Endpoints Minimal API en ASP.NET Core.
+    \item \textbf{Vista:} Componentes de React (frontend).
+\end{itemize}
+
+\section{Diagrama de Base de Datos}
+La base de datos utilizada es \textbf{MySQL}, relacional, y consta de tablas para jugadores, partidas y movimientos.
+
+
+    \includegraphics[width=0.5\linewidth]{image.png}
+    
+\section{Referencias y Prompts de IA}
+
+\subsection*{Fuentes Consultadas}
+\begin{itemize}
+    \item Documentación oficial de .NET 8: \url{https://learn.microsoft.com/en-us/aspnet/core}
+    \item Documentación de React: \url{https://react.dev/}
+    \item Tutorial de Vite: \url{https://vitejs.dev/guide/}
+    \item Manual de Dapper ORM: \url{https://dapper-tutorial.net/}
+    \item Guía de MySQL 8: \url{https://dev.mysql.com/doc/}
+    \item Introducción a LaTeX: \url{https://www.overleaf.com/learn/latex/Learn_LaTeX_in_30_minutes}
+\end{itemize}
+
+\subsection*{Prompts de Inteligencia Artificial}
+\begin{itemize}
+    \item \textbf{Prompt de entrada:} “Genera un ejemplo de documentación en LaTeX, Además, explica cómo funciona cada sección dentro de la documentación y cuáles son los beneficios de estructurarla de esta manera.”
+    \item \textbf{Respuesta del agente de IA:} “Se sugiere estructurar la documentación en secciones: Integrantes, Frameworks, Arquitectura, Diagrama, Referencias y Guía de ejecución.”
+\end{itemize}
+
+\section{Instructivo de Instalación y Ejecución}
+
+\subsection*{Requisitos Previos}
+\begin{itemize}
+    \item MySQL 8+ con base de datos \texttt{quixo} creada.
+    \item .NET SDK 8 instalado (Visual Studio 2022 actualizado).
+    \item Node.js versión 18 o superior.
+\end{itemize}
+
+\subsection*{Backend (Visual Studio 2022)}
+\begin{enumerate}
+    \item Abrir el proyecto \texttt{Quixo.Api.csproj} desde Visual Studio 2022.
+    \item Editar \texttt{appsettings.json} con las credenciales de MySQL.
+    \item Ejecutar el proyecto (F5).  
+          La API expone Swagger en \url{/swagger}.
+    \item Nota: Si el puerto cambia (por ejemplo de 5199), actualizar la variable \texttt{VITE\_API\_URL} en el frontend.
+\end{enumerate}
+
+\subsection*{Frontend (VS Code o similar)}
+\begin{verbatim}
+cd frontend/quixo-web
+npm i
+# Si el backend corre en otro puerto/host:
+# set VITE_API_URL=http://localhost:5199
+npm run dev
+\end{verbatim}
+Abrir en el navegador: \url{http://localhost:5173}
+
+\subsection*{Datos de Ejemplo}
+Agregar en la tabla \texttt{players} al menos 4 jugadores con IDs del 1 al 4 o ajustar el archivo \texttt{NewGame.jsx} según sea necesario.
+
+\subsection*{Exportar XML y Estadísticas}
+\begin{itemize}
+    \item Exportar partida: \texttt{GET /api/games/\{id\}/export.xml}
+    \item Estadísticas por tipo: \texttt{GET /api/stats/duo} y \texttt{GET /api/stats/quartet}
+\end{itemize}
+
+
+
+\end{document}
