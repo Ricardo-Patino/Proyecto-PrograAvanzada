@@ -5,6 +5,7 @@ import App from './App'
 import NewGame from './pages/NewGame'
 import FinishedGames from './pages/FinishedGames'
 import Stats from './pages/Stats'
+import Replay from './pages/Replay'
 
 const router = createBrowserRouter([
   { path: '/', element: <App />,
@@ -12,6 +13,7 @@ const router = createBrowserRouter([
       { index: true, element: <NewGame /> },
       { path: 'finished', element: <FinishedGames /> },
       { path: 'stats', element: <Stats /> },
+      { path: 'replay/:gameId', element: <Replay /> },
     ]
   }
 ])

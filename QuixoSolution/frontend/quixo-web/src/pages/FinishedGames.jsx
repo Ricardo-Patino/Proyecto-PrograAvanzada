@@ -14,7 +14,10 @@ export default function FinishedGames(){
         <tbody>
           {rows.map(r=> (
             <tr key={r.id}>
-              <td>{r.id}</td>
+              <td>
+  <Link to={`/replay/${r.id}`}>Ver</Link>
+</td>
+
               <td>{r.mode}</td>
               <td>{new Date(r.created_at).toLocaleString()}</td>
               <td>{new Date(r.finished_at).toLocaleString()}</td>
