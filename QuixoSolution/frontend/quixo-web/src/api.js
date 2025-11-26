@@ -6,9 +6,11 @@ export async function createGame(payload){
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   })
-  if(!res.ok) throw new Error('Error creando juego')
+  if(!res.ok) throw new Error(await res.text()+'Error creando juego')
   return res.json()
+
 }
+
 
 export async function postMove(gameId, payload){
   const res = await fetch(`${API}/api/games/${gameId}/moves`, {
@@ -16,19 +18,19 @@ export async function postMove(gameId, payload){
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(payload)
   })
-  if(!res.ok) throw new Error('Error registrando jugada')
+  if(!res.ok) throw new Error(await res.text()+'Error registrando jugada')
   return res.json()
 }
 
 export async function listFinished(){
   const res = await fetch(`${API}/api/games/finished`)
-  if(!res.ok) throw new Error('Error listando partidas')
+  if(!res.ok) throw new Error(await res.text()+'Error listando partidas')
   return res.json()
 }
 
 export async function replay(gameId){
   const res = await fetch(`${API}/api/games/${Number(gameId)}/replay`)
-  if(!res.ok) throw new Error('No existe')
+  if(!res.ok) throw new Error(await res.text()+'No existe')
   return res.json()
 }
 
