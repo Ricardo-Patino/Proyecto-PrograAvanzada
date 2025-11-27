@@ -34,8 +34,16 @@ export default function NewGame(){
     return mode === 'DUO' ? ( (turn % 2 === 1) ? 'TOP' : 'BOTTOM' ) : SEATS[(turn-1) % 4]
   }, [turn, mode])
 
-  const currentTeam = TEAM_OF_SEAT[currentSeat]
-  const currentSymbol = SYMBOL_OF_TEAM[currentTeam]
+let currentSymbol;
+if (mode === 'DUO') {
+  // DUO: TOP = CIRCLE, BOTTOM = CROSS
+  currentSymbol = currentSeat === 'TOP' ? CIRCLE : CROSS;
+} else {
+  // QUARTET usa equipos A/B
+  const currentTeam = TEAM_OF_SEAT[currentSeat];
+  currentSymbol = SYMBOL_OF_TEAM[currentTeam];
+}
+
   const opponentSymbol = currentSymbol === CIRCLE ? CROSS : CIRCLE
 
   // Primera vuelta: DUO -> turn<=2; QUARTET -> turn<=4
@@ -80,7 +88,7 @@ export default function NewGame(){
     // En QUARTET, si es tu símbolo, el dot debe apuntarte
     if(mode === 'QUARTET' && cell.sym === currentSymbol){
       const mustFace = {
-        A: { TOP:'UP', BOTTOM:'DOWN' },
+        A: { TOP:'TOP', BOTTOM:'BOTTOM' },
         B: { RIGHT:'RIGHT', LEFT:'LEFT' }
       }[currentTeam][currentSeat]
       if(cell.dot !== mustFace) return alert('Solo puedes retirar un cubo de tu símbolo cuyo punto te apunte')
@@ -99,7 +107,7 @@ export default function NewGame(){
     // Dot por defecto (QUARTET): apunta a ti mismo
     if(mode==='QUARTET'){
       const defaultDot = {
-        TOP: 'UP', RIGHT: 'RIGHT', BOTTOM: 'DOWN', LEFT: 'LEFT'
+        TOP: 'TOP', RIGHT: 'RIGHT', BOTTOM: 'BOTTOM', LEFT: 'LEFT'
       }[currentSeat]
       setChosenDot(defaultDot)
     }
@@ -115,7 +123,7 @@ export default function NewGame(){
       // fila r
       const row = []
       for(let j=0;j<SIZE;j++) if(j!==c) row.push(nb[idxOf(r,j)])
-      const placed = { sym: currentSymbol, dot: (mode==='QUARTET' ? dotForPlaced : 'UP') }
+      const placed = { sym: currentSymbol, dot: (mode==='QUARTET' ? dotForPlaced : 'TOP') }
       if(direction === 'LEFT') row.unshift(placed)
       else row.push(placed)
       for(let j=0;j<SIZE;j++) nb[idxOf(r,j)] = row[j]
@@ -125,7 +133,7 @@ export default function NewGame(){
       // columna c
       const col = []
       for(let i=0;i<SIZE;i++) if(i!==r) col.push(nb[idxOf(i,c)])
-      const placed = { sym: currentSymbol, dot: (mode==='QUARTET' ? dotForPlaced : 'UP') }
+      const placed = { sym: currentSymbol, dot: (mode==='QUARTET' ? dotForPlaced : 'TOP') }
       if(direction === 'TOP') col.unshift(placed)
       else col.push(placed)
       for(let i=0;i<SIZE;i++) nb[idxOf(i,c)] = col[i]
@@ -164,9 +172,9 @@ export default function NewGame(){
     if(selected == null) return
 
     // En QUARTET, obliga a elegir dot válido (solo hacia los asientos de tu equipo)
-    let dot = 'UP'
+    let dot = 'TOP'
     if(mode==='QUARTET'){
-      const validDots = currentTeam==='A' ? ['UP','DOWN'] : ['LEFT','RIGHT']
+      const validDots = currentTeam==='A' ? ['TOP','BOTTOM'] : ['LEFT','RIGHT']
       if(!chosenDot || !validDots.includes(chosenDot)){
         return alert('Elige la orientación del punto para decidir quién de tu equipo podrá jugar el cubo')
       }
@@ -249,8 +257,8 @@ export default function NewGame(){
               <div style={{display:'flex', gap:8, marginTop:6, flexWrap:'wrap'}}>
                 {currentTeam==='A' && (
                   <>
-                    <button className={`dotbtn ${chosenDot==='UP'?'sel':''}`} onClick={()=>setChosenDot('UP')}>⬆️ Apunta a TOP</button>
-                    <button className={`dotbtn ${chosenDot==='DOWN'?'sel':''}`} onClick={()=>setChosenDot('DOWN')}>⬇️ Apunta a BOTTOM</button>
+                    <button className={`dotbtn ${chosenDot==='TOP'?'sel':''}`} onClick={()=>setChosenDot('TOP')}>⬆️ Apunta a TOP</button>
+                    <button className={`dotbtn ${chosenDot==='BOTTOM'?'sel':''}`} onClick={()=>setChosenDot('BOTTOM')}>⬇️ Apunta a BOTTOM</button>
                   </>
                 )}
                 {currentTeam==='B' && (

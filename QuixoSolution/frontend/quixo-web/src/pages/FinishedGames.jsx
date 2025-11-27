@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listFinished } from '../api'
+import { Link } from 'react-router-dom';
+
 
 export default function FinishedGames(){
   const [rows, setRows] = useState([])
