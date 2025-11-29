@@ -30,6 +30,103 @@
       .cell.sel { outline: 3px solid #60a5fa; }
       .dirbtn, .dotbtn { padding:8px 10px; border:1px solid #374151; background:#0f172a; border-radius:10px; cursor:pointer; }
       .dirbtn:hover, .dotbtn:hover { background:#1f2937; }
+
+      /* --- TABLERO --- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 64px);
+  gap: 6px;
+  padding: 12px;
+  background: #1f2937;
+  border-radius: 12px;
+}
+
+.cell {
+  width: 64px;
+  height: 64px;
+  background: #374151;
+  border-radius: 10px;
+  font-size: 28px;
+  color: #f3f4f6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 200ms;
+  cursor: default;
+  user-select: none;
+}
+
+/* Periferia clickeable */
+.cell.perimeter {
+  cursor: pointer;
+  background: #4b5563;
+}
+.cell.perimeter:hover {
+  background: #6b7280;
+  transform: scale(1.06);
+}
+
+/* Seleccionada */
+.cell.sel {
+  box-shadow: 0 0 8px 3px #60a5fa;
+  background: #3b82f6 !important;
+  transform: scale(1.1);
+}
+
+/* --- BOTONES --- */
+.btn {
+  background: #2563eb;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: 150ms;
+  font-weight: 600;
+}
+.btn:hover { background: #1d4ed8; }
+.btn:active { transform: scale(0.96); }
+
+.tag {
+  background: #374151;
+  color: #e5e7eb;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.dirbtn, .dotbtn {
+  background: #4b5563;
+  color: white;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 150ms;
+}
+.dirbtn:hover, .dotbtn:hover { background: #6b7280; }
+.dotbtn.sel {
+  outline: 3px solid #3b82f6;
+}
+
+/* --- SCROLL PANEL (LOG) --- */
+.log-panel {
+  width: 250px;
+  height: 350px;
+  background: #111827;
+  border-radius: 10px;
+  padding: 10px;
+  overflow-y: auto;
+  color: #e5e7eb;
+  font-size: 14px;
+}
+.log-entry {
+  padding: 4px 0;
+  border-bottom: 1px solid #374151;
+  opacity: 0.85;
+}
+
+      
     </style>
   </head>
   <body>

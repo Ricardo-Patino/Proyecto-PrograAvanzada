@@ -30,9 +30,10 @@ export default function Board({ board, selected, onPick }) {
             onClick={() => isPerimeter && onPick?.(idx)}
             title={isPerimeter ? 'Periferia (clic para seleccionar)' : 'No seleccionable'}
           >
-            <div style={{display:'flex', flexDirection:'column', alignItems:'center', lineHeight:1.1}}>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.1 }}>
               <div>{sym}</div>
-              <div style={{fontSize:12, opacity:0.8}}>{dotChar(cell.dot)}</div>
+              <div style={{ fontSize: 12, opacity: 0.8 }}>{dotChar(cell.dot)}</div>
             </div>
           </div>
         )
