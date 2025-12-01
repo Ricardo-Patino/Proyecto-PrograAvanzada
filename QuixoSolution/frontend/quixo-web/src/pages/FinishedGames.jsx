@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { listFinished } from '../api'
 import { Link } from 'react-router-dom';
 
-
 export default function FinishedGames(){
   const [rows, setRows] = useState([])
   useEffect(()=>{
@@ -12,18 +11,25 @@ export default function FinishedGames(){
     <section>
       <h2>Partidas finalizadas</h2>
       <table>
-        <thead><tr><th>ID</th><th>Modo</th><th>Creada</th><th>Finalizada</th><th>Tiempo (s)</th></tr></thead>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Modo</th>
+            <th>Creada</th>
+            <th>Finalizada</th>
+            <th>Tiempo (s)</th>
+          </tr>
+        </thead>
         <tbody>
           {rows.map(r=> (
-            <tr key={r.id}>
+            <tr key={r.game_id}>
               <td>
-  <Link to={`/replay/${r.id}`}>Ver</Link>
-</td>
-
+                <Link to={`/replay/${r.game_id}`}>Ver</Link>
+              </td>
               <td>{r.mode}</td>
               <td>{new Date(r.created_at).toLocaleString()}</td>
-              <td>{new Date(r.finished_at).toLocaleString()}</td>
-              <td>{r.elapsed_seconds}</td>
+              <td>{new Date(r.ended_at).toLocaleString()}</td>
+              <td>{r.duration_seconds}</td>
             </tr>
           ))}
         </tbody>
@@ -31,3 +37,4 @@ export default function FinishedGames(){
     </section>
   )
 }
+
