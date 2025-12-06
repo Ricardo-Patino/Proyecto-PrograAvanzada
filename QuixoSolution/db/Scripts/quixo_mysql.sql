@@ -291,7 +291,7 @@ BEGIN
   -- tot: total de partidas q
   -- wins: ganadas por equipo sobre q
   SELECT
-    w.team AS equipo,
+    t.total AS jugadas, w.team AS equipo,
     ROUND(100.0 * w.ganadas / NULLIF(t.total,0), 2) AS efectividad_pct,
     w.ganadas
   FROM (
