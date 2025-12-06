@@ -1,4 +1,4 @@
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000' // adjust to your backend port
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000' // adjust backend port
 
 export async function createGame(payload){
   const res = await fetch(`${API}/api/games`, {

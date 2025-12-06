@@ -177,42 +177,112 @@ ORDER BY m.move_no ASC;", new { id = gameId });
 
     return Results.Ok(new { game, participants, moves });
 });
+
 // Estadísticas DUO: usa SP si existe, si no usa fallback SQL.
+
 app.MapGet("/api/stats/duo", async (IDbConnection db) =>
 {
-    try { var sp = await db.QueryAsync("CALL sp_stats_duo();"); return Results.Ok(sp); }
-    catch
-    {
-        var rows = await db.QueryAsync(@"
-SELECT pl.display_name AS jugador,
-       SUM(g.winner_player_id=pl.player_id) AS ganadas,
-       COUNT(*) AS played_cnt,
-       ROUND(100*SUM(g.winner_player_id=pl.player_id)/NULLIF(COUNT(*),0),2) AS efectividad_pct
+    var sql = @"
+WITH final_moves AS (
+  -- Último movimiento que cerró cada partida DUO (ganó o regaló línea)
+  SELECT m.*
+  FROM moves m
+  JOIN (
+    SELECT game_id, MAX(move_no) AS max_move
+    FROM moves
+    WHERE caused_win = 1 OR caused_loss_by_opponent_line = 1
+    GROUP BY game_id
+  ) mx ON mx.game_id = m.game_id AND mx.max_move = m.move_no
+  JOIN games g ON g.game_id = m.game_id AND g.mode = 'DUO'
+),
+winners AS (
+  -- Ganador por partida:
+  --  - si caused_win = 1 => gana quien jugó (played_by)
+  --  - si caused_loss_by_opponent_line = 1 => gana el otro jugador
+  SELECT
+    fm.game_id,
+    CASE
+      WHEN fm.caused_win = 1 THEN fm.played_by
+      WHEN fm.caused_loss_by_opponent_line = 1 THEN
+        (
+          SELECT gp2.player_id
+          FROM game_participants gp2
+          WHERE gp2.game_id = fm.game_id
+            AND gp2.player_id <> fm.played_by
+          LIMIT 1
+        )
+      ELSE NULL
+    END AS winner_player_id
+  FROM final_moves fm
+)
+SELECT
+  pl.player_id,
+  pl.display_name AS jugador,
+  COUNT(DISTINCT gp.game_id) AS played_cnt,
+  SUM(CASE WHEN w.winner_player_id = pl.player_id THEN 1 ELSE 0 END) AS ganadas,
+  ROUND(
+    100.0 * SUM(CASE WHEN w.winner_player_id = pl.player_id THEN 1 ELSE 0 END)
+    / NULLIF(COUNT(DISTINCT gp.game_id), 0)
+  , 2) AS efectividad_pct
 FROM players pl
-JOIN game_participants gp ON gp.player_id=pl.player_id
-JOIN games g ON g.game_id=gp.game_id AND g.mode='DUO' AND g.status='FINISHED'
+JOIN game_participants gp ON gp.player_id = pl.player_id
+JOIN winners w ON w.game_id = gp.game_id
 GROUP BY pl.player_id, pl.display_name
-ORDER BY efectividad_pct DESC, ganadas DESC;");
-        return Results.Ok(rows);
-    }
+ORDER BY efectividad_pct DESC, ganadas DESC, jugador ASC;
+";
+    var rows = await db.QueryAsync(sql);
+    return Results.Ok(rows);
 });
+
+
 // Estadísticas QUARTET: SP o SQL de respaldo.
 app.MapGet("/api/stats/quartet", async (IDbConnection db) =>
 {
-    try { var sp = await db.QueryAsync("CALL sp_stats_quartet();"); return Results.Ok(sp); }
-    catch
-    {
-        var rows = await db.QueryAsync(@"
-SELECT g.winner_team AS equipo,
-       COUNT(*) AS ganadas,
-       (SELECT COUNT(*) FROM games x WHERE x.mode='QUARTET' AND x.status='FINISHED') AS total,
-       ROUND(100*COUNT(*)/NULLIF((SELECT COUNT(*) FROM games x WHERE x.mode='QUARTET' AND x.status='FINISHED'),0),2) AS efectividad_pct
-FROM games g
-WHERE g.mode='QUARTET' AND g.status='FINISHED' AND g.winner_team IS NOT NULL
-GROUP BY g.winner_team;");
-        return Results.Ok(rows);
-    }
+    var sql = @"
+WITH final_moves AS (
+  -- Último movimiento que cerró cada partida QUARTET
+  SELECT m.*
+  FROM moves m
+  JOIN (
+    SELECT game_id, MAX(move_no) AS max_move
+    FROM moves
+    WHERE caused_win = 1 OR caused_loss_by_opponent_line = 1
+    GROUP BY game_id
+  ) mx ON mx.game_id = m.game_id AND mx.max_move = m.move_no
+  JOIN games g ON g.game_id = m.game_id AND g.mode = 'QUARTET'
+),
+winners AS (
+  -- Ganador por partida:
+  --  - si caused_win = 1 => gana el equipo que jugó (played_team)
+  --  - si caused_loss_by_opponent_line = 1 => gana el equipo contrario
+  SELECT
+    fm.game_id,
+    CASE
+      WHEN fm.caused_win = 1 THEN fm.played_team
+      WHEN fm.caused_loss_by_opponent_line = 1 THEN
+        (CASE fm.played_team WHEN 'A' THEN 'B' WHEN 'B' THEN 'A' END)
+      ELSE NULL
+    END AS winner_team
+  FROM final_moves fm
+),
+totals AS (
+  SELECT COUNT(DISTINCT game_id) AS total FROM final_moves
+)
+SELECT
+  w.winner_team AS equipo,
+  COUNT(*) AS ganadas,
+  t.total AS jugadas,
+  ROUND(100.0 * COUNT(*) / NULLIF(t.total, 0), 2) AS efectividad_pct
+FROM winners w
+CROSS JOIN totals t
+GROUP BY w.winner_team, t.total
+ORDER BY equipo;
+";
+    var rows = await db.QueryAsync(sql);
+    return Results.Ok(rows);
 });
+
+
 // Exporta partida en XML vía SP o XML mínimo de respaldo.
 app.MapGet("/api/games/{gameId:long}/export.xml", async (IDbConnection db, long gameId) =>
 {

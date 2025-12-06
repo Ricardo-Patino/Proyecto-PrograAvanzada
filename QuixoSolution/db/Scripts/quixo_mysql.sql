@@ -205,19 +205,86 @@ BEGIN
 END$$
 
 -- Cerrar partida automáticamente si una jugada causó victoria
+
 CREATE TRIGGER trg_moves_close_game
 AFTER INSERT ON moves
 FOR EACH ROW
 BEGIN
+  -- Solo nos interesa cuando la jugada termina la partida
   IF NEW.caused_win = TRUE OR NEW.caused_loss_by_opponent_line = TRUE THEN
-    UPDATE games
-       SET status   = 'FINISHED',
-           ended_at = COALESCE(ended_at, CURRENT_TIMESTAMP)
-     WHERE game_id  = NEW.game_id;
+
+    DECLARE v_mode ENUM('DUO','QUARTET');
+    DECLARE v_winner_player BIGINT UNSIGNED;
+    DECLARE v_winner_team ENUM('A','B');
+
+    -- Obtenemos el modo de la partida
+    SELECT mode INTO v_mode
+    FROM games
+    WHERE game_id = NEW.game_id;
+
+    -- =======================
+    -- MODO DUO (2 jugadores)
+    -- =======================
+    IF v_mode = 'DUO' THEN
+
+      -- Si YO formé la línea, gano yo
+      IF NEW.caused_win = TRUE THEN
+        SET v_winner_player = NEW.played_by;
+      -- Si le formé la línea al rival, gana el OTRO jugador
+      ELSE
+        SELECT gp.player_id
+          INTO v_winner_player
+        FROM game_participants gp
+        WHERE gp.game_id = NEW.game_id
+          AND gp.player_id <> NEW.played_by
+        LIMIT 1;
+      END IF;
+
+      UPDATE games
+         SET status                  = 'FINISHED',
+             ended_at                = COALESCE(ended_at, CURRENT_TIMESTAMP),
+             winner_player_id        = v_winner_player,
+             winner_team             = NULL,
+             loser_made_opponent_line = NEW.caused_loss_by_opponent_line
+       WHERE game_id = NEW.game_id;
+
+    -- ==========================
+    -- MODO QUARTET (4 jugadores)
+    -- ==========================
+    ELSEIF v_mode = 'QUARTET' THEN
+
+      -- Equipo ganador según quién jugó / perdió
+      IF NEW.caused_win = TRUE THEN
+        SET v_winner_team = NEW.played_team;
+      ELSE
+        SET v_winner_team = CASE NEW.played_team
+                              WHEN 'A' THEN 'B'
+                              WHEN 'B' THEN 'A'
+                              ELSE NULL
+                            END;
+      END IF;
+
+      UPDATE games
+         SET status                  = 'FINISHED',
+             ended_at                = COALESCE(ended_at, CURRENT_TIMESTAMP),
+             winner_team             = v_winner_team,
+             winner_player_id        = NULL,
+             loser_made_opponent_line = NEW.caused_loss_by_opponent_line
+       WHERE game_id = NEW.game_id;
+
+    -- Cualquier otro caso raro: al menos cerramos la partida
+    ELSE
+      UPDATE games
+         SET status   = 'FINISHED',
+             ended_at = COALESCE(ended_at, CURRENT_TIMESTAMP)
+       WHERE game_id = NEW.game_id;
+    END IF;
+
   END IF;
 END$$
 
 DELIMITER ;
+
 
 -- ========================================================
 -- 5) Vistas de apoyo
@@ -252,34 +319,64 @@ DELIMITER $$
 -- Efectividad por jugador (DUO)
 CREATE PROCEDURE sp_stats_duo()
 BEGIN
+  /* Último movimiento que cerró cada partida DUO */
+  WITH final_moves AS (
+    SELECT m.*
+    FROM moves m
+    JOIN (
+      SELECT game_id, MAX(move_no) AS max_move
+      FROM moves
+      WHERE caused_win = 1 OR caused_loss_by_opponent_line = 1
+      GROUP BY game_id
+    ) mx ON mx.game_id = m.game_id AND mx.max_move = m.move_no
+    JOIN games g ON g.game_id = m.game_id AND g.mode = 'DUO'
+  ),
+  winners AS (
+    /* Gana quien jugó si caused_win=1; si “regaló” la línea, gana el otro jugador */
+    SELECT
+      fm.game_id,
+      CASE
+        WHEN fm.caused_win = 1 THEN fm.played_by
+        ELSE (
+          SELECT gp2.player_id
+          FROM game_participants gp2
+          WHERE gp2.game_id = fm.game_id
+            AND gp2.player_id <> fm.played_by
+          LIMIT 1
+        )
+      END AS winner_player_id
+    FROM final_moves fm
+  )
   SELECT
-    p.player_id,
+    pl.player_id,
     pl.display_name AS jugador,
-    IFNULL(w.wins_cnt,0) AS ganadas,
-    p.played_cnt,
-    CASE WHEN p.played_cnt>0
-      THEN ROUND(100.0 * IFNULL(w.wins_cnt,0) / p.played_cnt, 2)
-      ELSE 0 END AS efectividad_pct
-  FROM (
-    -- Jugadores que participaron en partidas DUO finalizadas
-    SELECT gp.player_id, COUNT(*) AS played_cnt
-    FROM game_participants gp
-    JOIN games g ON g.game_id = gp.game_id
-    WHERE g.mode='DUO'
-      AND g.status='FINISHED'
-    GROUP BY gp.player_id
-  ) AS p
-  JOIN players pl ON pl.player_id = p.player_id
-  LEFT JOIN (
-    -- Ganadores en partidas DUO
-    SELECT g.winner_player_id AS player_id, COUNT(*) AS wins_cnt
-    FROM games g
-    WHERE g.mode='DUO'
-      AND g.status='FINISHED'
-      AND g.winner_player_id IS NOT NULL
-    GROUP BY g.winner_player_id
-  ) AS w ON w.player_id = p.player_id
-  ORDER BY efectividad_pct DESC, ganadas DESC, jugador;
+    COUNT(DISTINCT gp.game_id) AS played_cnt,
+    SUM(w.winner_player_id = pl.player_id) AS ganadas,
+    CASE
+      WHEN COUNT(DISTINCT gp.game_id) > 0 THEN
+        ROUND(
+          100.0 * SUM(w.winner_player_id = pl.player_id)
+          / COUNT(DISTINCT gp.game_id),
+          2
+        )
+      ELSE 0
+    END AS efectividad_pct
+  FROM players pl
+  JOIN game_participants gp
+    ON gp.player_id = pl.player_id
+  JOIN games g
+    ON g.game_id = gp.game_id
+   AND g.mode = 'DUO'
+  /* Solo contamos partidas que sí tienen movimiento final */
+  WHERE EXISTS (
+    SELECT 1
+    FROM final_moves fm
+    WHERE fm.game_id = gp.game_id
+  )
+  LEFT JOIN winners w
+    ON w.game_id = gp.game_id
+  GROUP BY pl.player_id, pl.display_name
+  ORDER BY efectividad_pct DESC, ganadas DESC, jugador ASC;
 END$$
 
 DELIMITER $$
@@ -287,26 +384,43 @@ DELIMITER $$
 -- Efectividad por equipo (QUARTET)
 CREATE PROCEDURE sp_stats_quartet()
 BEGIN
-  -- q: partidas QUARTET finalizadas
-  -- tot: total de partidas q
-  -- wins: ganadas por equipo sobre q
+  /* Último movimiento que cerró cada partida QUARTET */
+  WITH final_moves AS (
+    SELECT m.*
+    FROM moves m
+    JOIN (
+      SELECT game_id, MAX(move_no) AS max_move
+      FROM moves
+      WHERE caused_win = 1 OR caused_loss_by_opponent_line = 1
+      GROUP BY game_id
+    ) mx ON mx.game_id = m.game_id AND mx.max_move = m.move_no
+    JOIN games g ON g.game_id = m.game_id AND g.mode = 'QUARTET'
+  ),
+  winners AS (
+    SELECT
+      fm.game_id,
+      CASE
+        WHEN fm.caused_win = 1 THEN fm.played_team
+        WHEN fm.caused_loss_by_opponent_line = 1 THEN
+          (CASE fm.played_team WHEN 'A' THEN 'B' WHEN 'B' THEN 'A' END)
+      END AS winner_team
+    FROM final_moves fm
+  ),
+  totals AS (
+    SELECT COUNT(DISTINCT game_id) AS total FROM final_moves
+  )
   SELECT
-    t.total AS jugadas, w.team AS equipo,
-    ROUND(100.0 * w.ganadas / NULLIF(t.total,0), 2) AS efectividad_pct,
-    w.ganadas
-  FROM (
-    SELECT winner_team AS team, COUNT(*) AS ganadas
-    FROM games
-    WHERE mode='QUARTET' AND status='FINISHED'
-    GROUP BY winner_team
-  ) AS w
-  CROSS JOIN (
-    SELECT COUNT(*) AS total
-    FROM games
-    WHERE mode='QUARTET' AND status='FINISHED'
-  ) AS t
+    w.winner_team AS equipo,
+    COUNT(*) AS ganadas,
+    t.total AS jugadas,
+    ROUND(100.0 * COUNT(*) / NULLIF(t.total, 0), 2) AS efectividad_pct
+  FROM winners w
+  CROSS JOIN totals t
+  GROUP BY w.winner_team, t.total
   ORDER BY equipo;
 END$$
+
+DELIMITER $$
 
 -- Exportar XML de una partida completa (estructura simple)
 CREATE PROCEDURE sp_get_game_xml(IN p_game_id BIGINT UNSIGNED)
