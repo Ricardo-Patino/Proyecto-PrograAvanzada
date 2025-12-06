@@ -155,7 +155,45 @@ VALUES (@gid, @no, @board);",
 // Lista partidas finalizadas.
 app.MapGet("/api/games/finished", async (IDbConnection db) =>
 {
-    var rows = await db.QueryAsync("SELECT * FROM v_finished_games;");
+    var sql = @"
+WITH final_moves AS (
+  -- Último movimiento que cierra cada partida (win o regaló línea)
+  SELECT m.game_id, MAX(m.move_no) AS max_move_no
+  FROM moves m
+  WHERE m.caused_win = 1 OR m.caused_loss_by_opponent_line = 1
+  GROUP BY m.game_id
+),
+final_info AS (
+  -- Momento en que realmente se terminó la partida (created_at del último move)
+  SELECT m.game_id,
+         m.created_at AS finished_at
+  FROM moves m
+  JOIN final_moves f
+    ON f.game_id = m.game_id
+   AND f.max_move_no = m.move_no
+)
+SELECT
+  g.game_id,
+  g.mode,
+  -- Consideramos estas partidas como FINISHED aunque games.status no se haya actualizado
+  'FINISHED' AS status,
+  g.created_at,
+  g.started_at,
+  COALESCE(g.ended_at, fi.finished_at) AS ended_at,
+  TIMESTAMPDIFF(
+    SECOND,
+    g.started_at,
+    COALESCE(g.ended_at, fi.finished_at)
+  ) AS duration_seconds,
+  g.winner_player_id,
+  g.winner_team,
+  g.loser_made_opponent_line
+FROM games g
+JOIN final_info fi
+  ON fi.game_id = g.game_id
+ORDER BY g.created_at DESC;
+";
+    var rows = await db.QueryAsync(sql);
     return Results.Ok(rows);
 });
 // Devuelve información completa para "replay" de una partida.
